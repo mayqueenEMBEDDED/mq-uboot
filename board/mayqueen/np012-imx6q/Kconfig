@@ -1,0 +1,15 @@
+if TARGET_MX6NP012
+
+config SYS_BOARD
+	default "np012-imx6q"
+
+config SYS_VENDOR
+	default "mayqueen"
+
+config SYS_SOC
+	default "mx6"
+
+config SYS_CONFIG_NAME
+	default "np012-imx6q"
+
+endif
