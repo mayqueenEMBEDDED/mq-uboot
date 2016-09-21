@@ -501,6 +501,10 @@ config TARGET_MX6NP012
 	bool "Support NP012 board"
 	select CPU_V7
 
+config TARGET_BF8A1
+	bool "Support bf8a1"
+	select CPU_V7
+
 config TARGET_WARP
 	bool "Support WaRP"
 	select CPU_V7
@@ -959,6 +963,7 @@ source "board/udoo/udoo_neo/Kconfig"
 source "board/vpac270/Kconfig"
 source "board/wandboard/Kconfig"
 source "board/mayqueen/np012-imx6q/Kconfig"
+source "board/tailyn/bf8a1/Kconfig"
 source "board/warp/Kconfig"
 source "board/woodburn/Kconfig"
 source "board/work-microwave/work_92105/Kconfig"
