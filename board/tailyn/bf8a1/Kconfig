@@ -1,0 +1,15 @@
+if TARGET_BF8A1
+
+config SYS_BOARD
+	default "bf8a1"
+
+config SYS_VENDOR
+	default "tailyn"
+
+config SYS_SOC
+	default "mx6"
+
+config SYS_CONFIG_NAME
+	default "bf8a1"
+
+endif
