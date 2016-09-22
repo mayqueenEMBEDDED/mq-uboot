@@ -243,25 +243,26 @@
 		"env import -t -r $loadaddr $filesize\0" \
 
 #define CONFIG_BOOTCOMMAND \
-	"mmc dev ${mmcdev};" \
-	"if mmc rescan; then " \
-		"if run loadbootenv; then " \
-			"echo Loaded environment from ${bootenv};" \
-			"run importbootenv;" \
-		"fi;" \
-		"if test -n $uenvcmd; then " \
-			"echo Running uenvcmd ...;" \
-			"run uenvcmd;" \
-		"fi;" \
-		"if run loadbootscript; then " \
-		"run bootscript; " \
-		"else " \
-			"if run loadimage; then " \
+	"if test ${bootmedia} = mmc; then " \
+	   "mmc dev ${mmcdev}; mmc rescan; " \
+	"fi;" \
+	"if run loadbootenv; then " \
+	   "echo Loaded environment from ${bootenv};" \
+	   "run importbootenv;" \
+	"fi;" \
+	"if test -n $uenvcmd; then " \
+		 "echo Running uenvcmd ...;" \
+	   "run uenvcmd;" \
+	"fi;" \
+		 "if run loadbootscript; then " \
+				"run bootscript; " \
+		 "else " \
+		 "if run loadimage; then " \
 				"run mmcboot; " \
-			"else run netboot; " \
+		 "else " \
+				"echo WARN: Cannot load kernel from boot media; " \
 			"fi; " \
-		"fi; " \
-	"else run netboot; fi"
+	"fi; "
 #endif
 
 #define CONFIG_ARP_TIMEOUT     200UL
