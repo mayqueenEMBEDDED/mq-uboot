@@ -701,6 +701,13 @@ int power_init_board(void)
 	reg |= LDOB_3_00V;
 	pmic_reg_write(pfuze, PFUZE100_VGEN5VOL, reg);
 
+	/* Increase VGEN6 to 3.3V */
+	pmic_reg_read(pfuze, PFUZE100_VGEN6VOL, &reg);
+	reg &= ~LDO_VOL_MASK;
+	reg |= LDOB_3_30V;
+	pmic_reg_write(pfuze, PFUZE100_VGEN6VOL, reg);
+
+
 	if (is_mx6dqp()) {
 		/* set SW1C staby volatage 1.075V*/
 		pmic_reg_read(pfuze, PFUZE100_SW1CSTBY, &reg);
