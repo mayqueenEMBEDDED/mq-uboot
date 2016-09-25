@@ -592,7 +592,7 @@ int board_eth_init(bd_t *bis)
 #define UCTRL_PWR_POL		(1 << 9)
 
 static iomux_v3_cfg_t const usb_hc1_pads[] = {
-	MX6_PAD_ENET_TXD1__GPIO1_IO29 | MUX_PAD_CTRL(NO_PAD_CTRL),
+	MX6_PAD_EIM_A17__GPIO2_IO21 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
 static void setup_usb(void)
@@ -629,9 +629,9 @@ int board_ehci_power(int port, int on)
 		break;
 	case 1:
 		if (on)
-			gpio_direction_output(IMX_GPIO_NR(1, 29), 1);
+			gpio_direction_output(IMX_GPIO_NR(2, 21), 1);
 		else
-			gpio_direction_output(IMX_GPIO_NR(1, 29), 0);
+			gpio_direction_output(IMX_GPIO_NR(2, 21), 0);
 		break;
 	default:
 		printf("MXC USB port %d not yet supported\n", port);
