@@ -185,7 +185,6 @@
 
 #else
 #define CONFIG_EXTRA_ENV_SETTINGS \
-	CONFIG_MFG_ENV_SETTINGS \
 	"script=boot.scr\0" \
 	"image=zImage\0" \
 	"fdt_file=" CONFIG_DEFAULT_FDT_FILE "\0" \
@@ -199,20 +198,6 @@
 	"mmcdev=" __stringify(CONFIG_SYS_MMC_ENV_DEV) "\0" \
 	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
 	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
-	"mmcautodetect=yes\0" \
-	"update_sd_firmware=" \
-		"if test ${ip_dyn} = yes; then " \
-			"setenv get_cmd dhcp; " \
-		"else " \
-			"setenv get_cmd tftp; " \
-		"fi; " \
-		"if mmc dev ${mmcdev}; then "	\
-			"if ${get_cmd} ${update_sd_firmware_filename}; then " \
-				"setexpr fw_sz ${filesize} / 0x200; " \
-				"setexpr fw_sz ${fw_sz} + 1; "	\
-				"mmc write ${loadaddr} 0x2 ${fw_sz}; " \
-			"fi; "	\
-		"fi\0" \
 	EMMC_ENV	  \
 	"mmcargs=setenv bootargs console=${console},${baudrate} " \
 		"root=${mmcroot}\0" \
