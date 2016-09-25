@@ -151,16 +151,6 @@ static iomux_v3_cfg_t const usdhc1_pads[] = {
 };
 
 
-/* Wifi SDIO*/
-static iomux_v3_cfg_t const usdhc2_pads[] = {
-	MX6_PAD_SD2_CLK__SD2_CLK	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD2_CMD__SD2_CMD	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD2_DAT0__SD2_DATA0	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD2_DAT1__SD2_DATA1	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD2_DAT2__SD2_DATA2	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
-	MX6_PAD_SD2_DAT3__SD2_DATA3	| MUX_PAD_CTRL(USDHC_PAD_CTRL),
-};
-
 /* SD SDIO*/
 static iomux_v3_cfg_t const usdhc3_pads[] = {
 	MX6_PAD_SD3_CLK__SD3_CLK   | MUX_PAD_CTRL(USDHC_PAD_CTRL),
@@ -281,10 +271,9 @@ static void setup_iomux_uart(void)
 }
 
 #ifdef CONFIG_FSL_ESDHC
-struct fsl_esdhc_cfg usdhc_cfg[3] = {
-	{USDHC2_BASE_ADDR},
+struct fsl_esdhc_cfg usdhc_cfg[2] = {
+	{USDHC1_BASE_ADDR},
 	{USDHC3_BASE_ADDR},
-	{USDHC4_BASE_ADDR},
 };
 
 int mmc_get_env_devno(void)
@@ -331,9 +320,6 @@ int board_mmc_getcd(struct mmc *mmc)
 	case USDHC3_BASE_ADDR:
 		ret = !gpio_get_value(USDHC3_CD_GPIO);
 		break;
-	case USDHC4_BASE_ADDR:
-		ret = 1; /* eMMC/uSDHC4 is always present */
-		break;
 	}
 
 	return ret;
@@ -348,27 +334,33 @@ int board_mmc_init(bd_t *bis)
 	/*
 	 * According to the board_mmc_init() the following map is done:
 	 * (U-boot device node)    (Physical Port)
-	 * mmc0                    SD2
-	 * mmc1                    SD3
-	 * mmc2                    eMMC
+	 * mmc0                    eMMC
+	 * mmc1                    SD
 	 */
+
+	imx_iomux_v3_setup_multiple_pads(usdhc1_pads, ARRAY_SIZE(usdhc1_pads));
+
+	imx_iomux_v3_setup_multiple_pads(usdhc3_pads, ARRAY_SIZE(usdhc3_pads));
+	gpio_direction_input(USDHC3_CD_GPIO);
+
 	for (i = 0; i < CONFIG_SYS_FSL_USDHC_NUM; i++) {
 		switch (i) {
 		case 0:
-			imx_iomux_v3_setup_multiple_pads(
-				usdhc1_pads, ARRAY_SIZE(usdhc1_pads));
 			usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
+			usdhc_cfg[0].max_bus_width = 8;
+			usdhc_cfg[0].esdhc_base = USDHC1_BASE_ADDR;
+			usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
+			usdhc_cfg[1].max_bus_width = 4;
+			usdhc_cfg[1].esdhc_base = USDHC3_BASE_ADDR;
+
 			break;
 		case 1:
-			imx_iomux_v3_setup_multiple_pads(
-				usdhc2_pads, ARRAY_SIZE(usdhc2_pads));
-			usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC2_CLK);
-			break;
-		case 2:
-			imx_iomux_v3_setup_multiple_pads(
-				usdhc3_pads, ARRAY_SIZE(usdhc3_pads));
-				gpio_direction_input(USDHC3_CD_GPIO);
-			usdhc_cfg[2].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
+			usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC3_CLK);
+			usdhc_cfg[0].max_bus_width = 4;
+			usdhc_cfg[0].esdhc_base = USDHC3_BASE_ADDR;
+			usdhc_cfg[1].sdhc_clk = mxc_get_clock(MXC_ESDHC_CLK);
+			usdhc_cfg[1].max_bus_width = 8;
+			usdhc_cfg[1].esdhc_base = USDHC1_BASE_ADDR;
 			break;
 		default:
 			printf("Warning: you configured more USDHC controllers"
@@ -401,13 +393,6 @@ int board_mmc_init(bd_t *bis)
 			usdhc1_pads, ARRAY_SIZE(usdhc1_pads));
 		usdhc_cfg[0].esdhc_base = USDHC1_BASE_ADDR;
 		usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC1_CLK);
-		gd->arch.sdhc_clk = usdhc_cfg[0].sdhc_clk;
-		break;
-	case 0x2:
-		imx_iomux_v3_setup_multiple_pads(
-			usdhc3_pads, ARRAY_SIZE(usdhc2_pads));
-		usdhc_cfg[0].esdhc_base = USDHC2_BASE_ADDR;
-		usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC2_CLK);
 		gd->arch.sdhc_clk = usdhc_cfg[0].sdhc_clk;
 		break;
 	case 0x3:

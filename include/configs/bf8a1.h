@@ -39,9 +39,9 @@
 
 #include "bf8a1_common.h"
 
-#define CONFIG_SYS_FSL_USDHC_NUM	3
-#define CONFIG_SYS_MMC_ENV_DEV		1	/* SDHC3 */
-#define CONFIG_SYS_MMC_ENV_PART                0       /* user partition */
+#define CONFIG_SYS_FSL_USDHC_NUM	2
+#define CONFIG_SYS_MMC_ENV_DEV		0	/* SDHC3 */
+#define CONFIG_SYS_MMC_ENV_PART                1       /* user partition */
 
 #ifdef CONFIG_SYS_USE_SPINOR
 #define CONFIG_SF_DEFAULT_CS   0
