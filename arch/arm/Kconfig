@@ -490,6 +490,11 @@ config TARGET_BF8A1
 	bool "Support bf8a1"
 	select CPU_V7
 
+config TARGET_AM335X_ST7B2
+	bool "Support am335x_st7b2"
+	select CPU_V7
+	select SUPPORT_SPL
+
 config TARGET_WARP
 	bool "Support WaRP"
 	select CPU_V7
@@ -946,6 +951,7 @@ source "board/udoo/Kconfig"
 source "board/vpac270/Kconfig"
 source "board/wandboard/Kconfig"
 source "board/tailyn/bf8a1/Kconfig"
+source "board/tailyn/st7b2/Kconfig"
 source "board/warp/Kconfig"
 source "board/woodburn/Kconfig"
 source "board/work-microwave/work_92105/Kconfig"
