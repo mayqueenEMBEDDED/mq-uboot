@@ -499,12 +499,12 @@ static struct cpsw_slave_data cpsw_slaves[] = {
 	{
 		.slave_reg_ofs	= 0x208,
 		.sliver_reg_ofs	= 0xd80,
-		.phy_addr	= 4,
+		.phy_addr	= 5,
 	},
 	{
 		.slave_reg_ofs	= 0x308,
 		.sliver_reg_ofs	= 0xdc0,
-		.phy_addr	= 5,
+		.phy_addr	= 7,
 	},
 };
 
@@ -614,19 +614,30 @@ int board_eth_init(bd_t *bis)
 	 * in the AR8051 PHY.  Since we only support a single ethernet
 	 * device in U-Boot, we only do this for the first instance.
 	 */
-#define AR8051_PHY_DEBUG_ADDR_REG	0x1d
-#define AR8051_PHY_DEBUG_DATA_REG	0x1e
-#define AR8051_DEBUG_RGMII_CLK_DLY_REG	0x5
-#define AR8051_RGMII_TX_CLK_DLY		0x100
+
+	unsigned short val;
 
 	if (board_is_evm_sk(&header) || board_is_gp_evm(&header)) {
 		const char *devname;
 		devname = miiphy_get_current_dev();
 
-		miiphy_write(devname, 0x0, AR8051_PHY_DEBUG_ADDR_REG,
-				AR8051_DEBUG_RGMII_CLK_DLY_REG);
-		miiphy_write(devname, 0x0, AR8051_PHY_DEBUG_DATA_REG,
-				AR8051_RGMII_TX_CLK_DLY);
+		/* To enable AR8031 ouput a 125MHz clk from CLK_25M */
+		miiphy_write(devname, 0x0, 0xd, 0x7);
+
+		miiphy_write(devname, 0x0, 0xe, 0x8016);
+		miiphy_write(devname, 0x0, 0xd, 0x4007);
+
+		miiphy_read(devname, 0x0, 0xe,&val);
+		/* AR8035 phy*/
+		val &= 0xffe7;
+		val |= 0x18;
+		miiphy_write(devname, 0x0, 0xe, val);
+
+		/* introduce tx clock delay */
+		miiphy_write(devname, 0x0, 0x1d, 0x5);
+		miiphy_read(devname, 0x0, 0x1e,&val);
+		val |= 0x0100;
+		miiphy_write(devname, 0x0, 0x1e, val);
 	}
 #endif
 #if defined(CONFIG_USB_ETHER) && \
