@@ -304,6 +304,7 @@ void am33xx_spl_board_init(void)
 		 * 1.1375V.  For MPU voltage we need to switch based on
 		 * the frequency we are running at.
 		 */
+		i2c_set_bus_num(1);
 		if (i2c_probe(TPS65910_CTRL_I2C_ADDR))
 			return;
 
