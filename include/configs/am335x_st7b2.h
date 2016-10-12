@@ -59,8 +59,8 @@
 	"nandrootfstype=ubifs rootwait=1\0" \
 	"nandboot=echo Booting from nand ...; " \
 		"run nandargs; " \
-		"nand read ${fdtaddr} u-boot-spl-os; " \
-		"nand read ${loadaddr} kernel; " \
+		"nand read ${fdtaddr} 0x80000 0x40000; " \
+		"nand read ${loadaddr} 0x200000 0x800000; " \
 		"bootz ${loadaddr} - ${fdtaddr}\0"
 #else
 #define NANDARGS ""
