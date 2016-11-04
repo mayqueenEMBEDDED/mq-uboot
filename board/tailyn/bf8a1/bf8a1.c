@@ -80,6 +80,15 @@ DECLARE_GLOBAL_DATA_PTR;
 	PAD_CTL_DSE_80ohm   | PAD_CTL_SRE_FAST  | PAD_CTL_HYS)
 
 
+#define WEAK_PULLDN_OUTPUT (PAD_CTL_PUS_100K_DOWN |		\
+	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm |			\
+	PAD_CTL_SRE_SLOW)
+
+
+#define WEAK_PULLUP_OUTPUT (PAD_CTL_PUS_100K_UP |		\
+	PAD_CTL_SPEED_MED | PAD_CTL_DSE_40ohm |			\
+	PAD_CTL_SRE_SLOW)
+
 #define I2C_PMIC	1
 
 #define I2C_PAD MUX_PAD_CTRL(I2C_PAD_CTRL)
@@ -100,7 +109,7 @@ static iomux_v3_cfg_t const uart4_pads[] = {
 	MX6_PAD_CSI0_DAT13__UART4_RX_DATA | MUX_PAD_CTRL(UART_PAD_CTRL),
 };
 
-static iomux_v3_cfg_t const enet_pads[] = {
+static iomux_v3_cfg_t const enet_init_pads[] = {
 	MX6_PAD_ENET_MDIO__ENET_MDIO		| MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_ENET_MDC__ENET_MDC		| MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_RGMII_TXC__RGMII_TXC	| MUX_PAD_CTRL(ENET_PAD_CTRL),
@@ -110,29 +119,67 @@ static iomux_v3_cfg_t const enet_pads[] = {
 	MX6_PAD_RGMII_TD3__RGMII_TD3	| MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_RGMII_TX_CTL__RGMII_TX_CTL	| MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_ENET_REF_CLK__ENET_TX_CLK	| MUX_PAD_CTRL(ENET_PAD_CTRL),
+/* AR8035 PHY Reset */
+#define AR8035_RESET	IMX_GPIO_NR(2, 18)
+	MX6_PAD_EIM_A20__GPIO2_IO18		| MUX_PAD_CTRL(NO_PAD_CTRL),
+/* AR8035 PHY IRQ */
+#define AR8035_IRQ	IMX_GPIO_NR(2, 23)
+	MX6_PAD_EIM_CS0__GPIO2_IO23		| MUX_PAD_CTRL(NO_PAD_CTRL),
+
+};
+
+static iomux_v3_cfg_t const enet_pads[] = {
 	MX6_PAD_RGMII_RXC__RGMII_RXC	| MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_RGMII_RD0__RGMII_RD0	| MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_RGMII_RD1__RGMII_RD1	| MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_RGMII_RD2__RGMII_RD2	| MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_RGMII_RD3__RGMII_RD3	| MUX_PAD_CTRL(ENET_PAD_CTRL),
 	MX6_PAD_RGMII_RX_CTL__RGMII_RX_CTL	| MUX_PAD_CTRL(ENET_PAD_CTRL),
-	/* AR8035 PHY Reset */
-	MX6_PAD_EIM_A20__GPIO2_IO18		| MUX_PAD_CTRL(NO_PAD_CTRL),
-	/* AR8035 PHY IRQ */
-	MX6_PAD_EIM_CS0__GPIO2_IO23		| MUX_PAD_CTRL(NO_PAD_CTRL),
 };
+
+static iomux_v3_cfg_t const enet_ar8035_pads[] = {
+	/* mode = 1100 - plloff mode */
+#define AR8035_MODE2	IMX_GPIO_NR(6, 30)
+	MX6_PAD_RGMII_RXC__GPIO6_IO30	| MUX_PAD_CTRL(WEAK_PULLUP_OUTPUT),
+#define AR8035_ADDR0	IMX_GPIO_NR(6, 25)
+	MX6_PAD_RGMII_RD0__GPIO6_IO25	| MUX_PAD_CTRL(WEAK_PULLDN_OUTPUT),
+#define AR8035_ADDR1	IMX_GPIO_NR(6, 27)
+	MX6_PAD_RGMII_RD1__GPIO6_IO27	| MUX_PAD_CTRL(WEAK_PULLDN_OUTPUT),
+#define AR8035_MODE1	IMX_GPIO_NR(6, 28)
+	MX6_PAD_RGMII_RD2__GPIO6_IO28	| MUX_PAD_CTRL(WEAK_PULLDN_OUTPUT),
+#define AR8035_MODE3	IMX_GPIO_NR(6, 29)
+	MX6_PAD_RGMII_RD3__GPIO6_IO29	| MUX_PAD_CTRL(WEAK_PULLUP_OUTPUT),
+#define AR8035_MODE0	IMX_GPIO_NR(6, 24)
+	MX6_PAD_RGMII_RX_CTL__GPIO6_IO24	| MUX_PAD_CTRL(WEAK_PULLDN_OUTPUT),
+};
+
 
 static void setup_iomux_enet(void)
 {
-	imx_iomux_v3_setup_multiple_pads(enet_pads, ARRAY_SIZE(enet_pads));
+	imx_iomux_v3_setup_multiple_pads(enet_pads, ARRAY_SIZE(enet_init_pads));
+	udelay(5);
+	imx_iomux_v3_setup_multiple_pads(enet_pads, ARRAY_SIZE(enet_ar8035_pads));
 
 	/* AR8035 IRQ */
-	gpio_direction_input(IMX_GPIO_NR(2, 23));
+	gpio_direction_input(AR8035_IRQ);
 
 	/* Reset AR8031 PHY */
-	gpio_direction_output(IMX_GPIO_NR(2, 18) , 0);
-	udelay(500);
-	gpio_set_value(IMX_GPIO_NR(2, 18), 1);
+	gpio_direction_output(AR8035_RESET, 0);
+
+	/* Set AR8035 to RGMII 1G mode */
+	gpio_direction_output(AR8035_ADDR0 , 0);
+	gpio_direction_output(AR8035_ADDR1 , 0);
+	gpio_direction_output(AR8035_MODE0 , 0);
+	gpio_direction_output(AR8035_MODE1 , 0);
+	gpio_direction_output(AR8035_MODE2 , 1);
+	gpio_direction_output(AR8035_MODE3 , 1);
+
+	udelay(10000);
+	gpio_set_value(AR8035_RESET, 1);
+	udelay(12);
+
+	imx_iomux_v3_setup_multiple_pads(enet_pads, ARRAY_SIZE(enet_pads));
+	udelay(100);
 }
 
 
@@ -434,7 +481,6 @@ int mx6_rgmii_rework(struct phy_device *phydev)
 
 int board_phy_config(struct phy_device *phydev)
 {
-	mx6_rgmii_rework(phydev);
 
 	if (phydev->drv->config)
 		phydev->drv->config(phydev);
@@ -582,9 +628,38 @@ int overwrite_console(void)
 int board_eth_init(bd_t *bis)
 {
 
+	uint32_t base = IMX_FEC_BASE;
+	struct mii_dev *bus = NULL;
+	struct phy_device *phydev = NULL;
+	int ret;
+
 	setup_iomux_enet();
 
-	return cpu_eth_init(bis);
+	bus = fec_get_miibus(base, -1);
+	if (!bus)
+		return -EINVAL;
+
+	/* scan phy 4,5,6,7 */
+	phydev = phy_find_by_mask(bus, (0xf << 4), PHY_INTERFACE_MODE_RGMII);
+
+	if (!phydev) {
+		ret = -EINVAL;
+		goto free_bus;
+	}
+
+	printf("%s at %d\n", phydev->drv->name, phydev->addr);
+	ret  = fec_probe(bis, -1, base, bus, phydev);
+
+	if (ret)
+		goto free_phydev;
+
+
+free_phydev:
+	free(phydev);
+free_bus:
+	free(bus);
+
+	return ret;
 }
 
 #ifdef CONFIG_USB_EHCI_MX6
