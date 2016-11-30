@@ -499,7 +499,7 @@ static struct cpsw_slave_data cpsw_slaves[] = {
 	{
 		.slave_reg_ofs	= 0x208,
 		.sliver_reg_ofs	= 0xd80,
-		.phy_addr	= 5,
+		.phy_addr	= 0,
 	},
 	{
 		.slave_reg_ofs	= 0x308,
