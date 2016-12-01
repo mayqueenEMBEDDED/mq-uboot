@@ -514,8 +514,9 @@ static struct cpsw_platform_data cpsw_data = {
 	.mdio_div		= 0xff,
 	.channels		= 8,
 	.cpdma_reg_ofs		= 0x800,
-	.slaves			= 1,
+	.slaves			= 2,
 	.slave_data		= cpsw_slaves,
+	.active_slave		= 1,
 	.ale_reg_ofs		= 0xd00,
 	.ale_entries		= 1024,
 	.host_port_reg_ofs	= 0x108,
@@ -571,34 +572,8 @@ int board_eth_init(bd_t *bis)
 	}
 
 #ifdef CONFIG_DRIVER_TI_CPSW
-
-	mac_lo = readl(&cdev->macid1l);
-	mac_hi = readl(&cdev->macid1h);
-	mac_addr[0] = mac_hi & 0xFF;
-	mac_addr[1] = (mac_hi & 0xFF00) >> 8;
-	mac_addr[2] = (mac_hi & 0xFF0000) >> 16;
-	mac_addr[3] = (mac_hi & 0xFF000000) >> 24;
-	mac_addr[4] = mac_lo & 0xFF;
-	mac_addr[5] = (mac_lo & 0xFF00) >> 8;
-
-	if (!getenv("eth1addr")) {
-		if (is_valid_ether_addr(mac_addr))
-			eth_setenv_enetaddr("eth1addr", mac_addr);
-	}
-
-	if (read_eeprom(&header) < 0)
-		puts("Could not get board ID.\n");
-
-	if (board_is_bone(&header) || board_is_bone_lt(&header) ||
-	    board_is_idk(&header)) {
-		writel(MII_MODE_ENABLE, &cdev->miisel);
-		cpsw_slaves[0].phy_if = cpsw_slaves[1].phy_if =
-				PHY_INTERFACE_MODE_MII;
-	} else {
-		writel((RGMII_MODE_ENABLE | RGMII_INT_DELAY), &cdev->miisel);
-		cpsw_slaves[0].phy_if = cpsw_slaves[1].phy_if =
-				PHY_INTERFACE_MODE_RGMII;
-	}
+	writel((GMII1_SEL_RMII | GMII2_SEL_RGMII | RGMII2_IDMODE), &cdev->miisel);
+	cpsw_slaves[1].phy_if = PHY_INTERFACE_MODE_RGMII;
 
 	rv = cpsw_register(&cpsw_data);
 	if (rv < 0)
@@ -614,31 +589,15 @@ int board_eth_init(bd_t *bis)
 	 * in the AR8051 PHY.  Since we only support a single ethernet
 	 * device in U-Boot, we only do this for the first instance.
 	 */
+	#define AR8051_PHY_DEBUG_ADDR_REG	0x1d
+	#define AR8051_PHY_DEBUG_DATA_REG	0x1e
+	#define AR8051_DEBUG_RGMII_CLK_DLY_REG	0x5
+	#define AR8051_RGMII_TX_CLK_DLY		0x100
+	const char *devname;
+	devname = miiphy_get_current_dev();
 
-	unsigned short val;
-
-	if (board_is_evm_sk(&header) || board_is_gp_evm(&header)) {
-		const char *devname;
-		devname = miiphy_get_current_dev();
-
-		/* To enable AR8031 ouput a 125MHz clk from CLK_25M */
-		miiphy_write(devname, 0x0, 0xd, 0x7);
-
-		miiphy_write(devname, 0x0, 0xe, 0x8016);
-		miiphy_write(devname, 0x0, 0xd, 0x4007);
-
-		miiphy_read(devname, 0x0, 0xe,&val);
-		/* AR8035 phy*/
-		val &= 0xffe7;
-		val |= 0x18;
-		miiphy_write(devname, 0x0, 0xe, val);
-
-		/* introduce tx clock delay */
-		miiphy_write(devname, 0x0, 0x1d, 0x5);
-		miiphy_read(devname, 0x0, 0x1e,&val);
-		val |= 0x0100;
-		miiphy_write(devname, 0x0, 0x1e, val);
-	}
+	miiphy_write(devname, 0x7, AR8051_PHY_DEBUG_ADDR_REG, AR8051_DEBUG_RGMII_CLK_DLY_REG);
+	miiphy_write(devname, 0x7, AR8051_PHY_DEBUG_DATA_REG, AR8051_RGMII_TX_CLK_DLY);
 #endif
 #if defined(CONFIG_USB_ETHER) && \
 	(!defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_USBETH_SUPPORT))
